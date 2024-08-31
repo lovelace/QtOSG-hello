@@ -24,7 +24,6 @@
 #include <QOpenGLWidget>
 #include <QMouseEvent>
 #include <QWheelEvent>
-#include <QDesktopWidget>
 #include <QScreen>
 #include <QtGlobal>
 #include <QWindow>
@@ -49,7 +48,7 @@ public:
                                                                  this->width(), this->height() ) )
         , _mViewer(new osgViewer::Viewer)
       // take care of HDPI screen, e.g. Retina display on Mac
-      , m_scale(QApplication::desktop()->devicePixelRatio())
+      , m_scale(QApplication::primaryScreen()->devicePixelRatio())
       {
         osg::Cylinder* cylinder    = new osg::Cylinder( osg::Vec3( 0.f, 0.f, 0.f ), 0.25f, 0.5f );
         osg::ShapeDrawable* sd = new osg::ShapeDrawable( cylinder );
@@ -102,7 +101,7 @@ protected:
 
   virtual void mouseMoveEvent(QMouseEvent* event)
   {
-      this->getEventQueue()->mouseMotion(event->x()*m_scale, event->y()*m_scale);
+      this->getEventQueue()->mouseMotion(event->position().x()*m_scale, event->position().y()*m_scale);
   }
 
   virtual void mousePressEvent(QMouseEvent* event)
@@ -121,7 +120,7 @@ protected:
       default:
           break;
       }
-      this->getEventQueue()->mouseButtonPress(event->x()*m_scale, event->y()*m_scale, button);
+      this->getEventQueue()->mouseButtonPress(event->position().x()*m_scale, event->position().y()*m_scale, button);
   }
 
   virtual void mouseReleaseEvent(QMouseEvent* event)
@@ -140,12 +139,12 @@ protected:
       default:
           break;
       }
-      this->getEventQueue()->mouseButtonRelease(event->x()*m_scale, event->y()*m_scale, button);
+      this->getEventQueue()->mouseButtonRelease(event->position().x()*m_scale, event->position().y()*m_scale, button);
   }
 
   virtual void wheelEvent(QWheelEvent* event)
   {
-      int delta = event->delta();
+      int delta = event->angleDelta().y();
       osgGA::GUIEventAdapter::ScrollingMotion motion = delta > 0 ?
                   osgGA::GUIEventAdapter::SCROLL_UP : osgGA::GUIEventAdapter::SCROLL_DOWN;
       this->getEventQueue()->mouseScroll(motion);
@@ -172,12 +171,6 @@ private:
 
 int main(int argc, char** argv)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5,6,0)
-    QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-#else
-    qputenv("QT_DEVICE_PIXEL_RATIO", QByteArray("1"));
-#endif
-
     QApplication qapp(argc, argv);
     QMainWindow window;
     QtOSGWidget* widget = new QtOSGWidget(&window);
